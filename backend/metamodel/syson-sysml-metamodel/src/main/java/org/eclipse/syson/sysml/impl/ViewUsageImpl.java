@@ -14,8 +14,10 @@ package org.eclipse.syson.sysml.impl;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
@@ -94,7 +96,7 @@ public class ViewUsageImpl extends PartUsageImpl implements ViewUsage {
                     if (memberElement != null) {
                         exposedElements.add(memberElement);
                         if (expose.isIsRecursive()) {
-                            exposedElements.addAll(this.getRecursiveContents(memberElement));
+                            exposedElements.addAll(this.getRecursiveContents(memberElement, new HashSet<>()));
                         }
                     }
                 }
@@ -106,13 +108,15 @@ public class ViewUsageImpl extends PartUsageImpl implements ViewUsage {
     /**
      * @generated NOT
      */
-    private List<Element> getRecursiveContents(Element element) {
+    private List<Element> getRecursiveContents(Element element, Set<Element> visited) {
         var contents = new ArrayList<Element>();
-        var ownedElements = element.getOwnedElement().stream().filter(Objects::nonNull).toList();
-        contents.addAll(ownedElements);
-        ownedElements.forEach(oe -> {
-            contents.addAll(this.getRecursiveContents(oe));
-        });
+        if (visited.add(element)) {
+            var ownedElements = element.getOwnedElement().stream().filter(Objects::nonNull).toList();
+            contents.addAll(ownedElements);
+            ownedElements.forEach(oe -> {
+                contents.addAll(this.getRecursiveContents(oe, visited));
+            });
+        }
         return contents;
     }
 
